@@ -13,10 +13,10 @@
 
 | 使用者輸入   | Agent 行為                             | 負責組員 |
 | ------------ | -------------------------------------- | -------- |
-| （例：天氣） | 呼叫 weather_tool，查詢即時天氣        |          |
-| （例：景點） | 呼叫 search_tool，搜尋熱門景點         |          |
-| （例：建議） | 呼叫 advice_tool，取得隨機建議         |          |
-| （例：出發） | 執行 trip_briefing Skill，產出行前簡報 |          |
+| 天氣         | 呼叫 weather_tool，查詢即時天氣        | 呂紹銘 |
+| 景點         | 呼叫 search_tool，搜尋熱門景點         | （待填） |
+| 建議         | 呼叫 advice_tool，取得隨機建議         | （待填） |
+| 出發         | 執行 trip_briefing Skill，產出行前簡報 | （待填） |
 
 ---
 
@@ -24,11 +24,11 @@
 
 | 姓名 | 負責功能     | 檔案        | 使用的 API |
 | ---- | ------------ | ----------- | ---------- |
-|      |              | `tools/`  |            |
-|      |              | `tools/`  |            |
-|      |              | `tools/`  |            |
-|      | Skill 整合   | `skills/` | —         |
-|      | Agent 主程式 | `main.py` | —         |
+| 呂紹銘 | 即時天氣查詢（temp_C、weatherDesc） | `tools/weather_tool.py`  | https://wttr.in/{city}?format=j1 |
+| （待填） | 熱門景點搜尋 | `tools/`  | （待填） |
+| （待填） | 隨機建議/冷知識 | `tools/`  | （待填） |
+| （待填） | Skill 整合   | `skills/` | —         |
+| （待填） | Agent 主程式 | `main.py` | —         |
 
 ---
 
@@ -38,7 +38,7 @@
 
 ```
 ├── tools/
-│   ├── xxx_tool.py   
+│   ├── weather_tool.py
 │   ├── xxx_tool.py   
 │   └── xxx_tool.py  
 ├── skills/
@@ -55,10 +55,10 @@
 範例：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+python tools/weather_tool.py Tokyo
 ```
 
 ---
@@ -68,43 +68,65 @@ python main.py
 > 貼上程式執行的實際範例輸出
 
 ```
-（貼上執行結果，例如下的指令與輸出結果）
+PS C:\Users\USER\Desktop\code\w6-agent-team9> .venv\Scripts\python.exe tools/weather_tool.py Tokyo
+{
+    "city": "Tokyo",
+    "temp_C": "18",
+    "weatherDesc": "Partly cloudy"
+}
 ```
 
 ---
 
 ## 各功能說明
 
-### [功能名稱]（負責：姓名）
+### 即時天氣查詢（負責：呂紹銘）
 
-- **Tool 名稱**：
-- **使用 API**：
-- **輸入**：
+- **Tool 名稱**：`get_realtime_weather`
+- **使用 API**：`https://wttr.in/{city}?format=j1`
+- **輸入**：城市名稱（例如：`Tokyo`、`Taipei`）
 - **輸出範例**：
 
-```python
-TOOL = {
-    "name": "",
-    "description": "",
-    "parameters": { ... }
+```json
+{
+  "city": "Tokyo",
+  "temp_C": "18",
+  "weatherDesc": "Partly cloudy"
 }
 ```
 
-### [功能名稱]（負責：姓名）
+```python
+TOOL = {
+    "name": "get_realtime_weather",
+    "description": "查詢目的地即時天氣，回傳溫度(temp_C)與天氣描述(weatherDesc)",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "city": {
+                "type": "string",
+                "description": "城市名稱，例如 Tokyo、Taipei"
+            }
+        },
+        "required": ["city"]
+    }
+}
+```
+
+### [功能名稱]（負責：待填）
 
 - **Tool 名稱**：
 - **使用 API**：
 - **輸入**：
 - **輸出範例**：
 
-### [功能名稱]（負責：姓名）
+### [功能名稱]（負責：待填）
 
 - **Tool 名稱**：
 - **使用 API**：
 - **輸入**：
 - **輸出範例**：
 
-### Skill：[Skill 名稱]（負責：姓名）
+### Skill：[Skill 名稱]（負責：待填）
 
 - **組合了哪些 Tool**：
 - **執行順序**：
