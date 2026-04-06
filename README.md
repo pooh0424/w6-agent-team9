@@ -12,23 +12,23 @@
 > 說明這個 Agent 能做什麼，使用者可以輸入哪些指令
 
 | 使用者輸入   | Agent 行為                             | 負責組員 |
-| ------------ | -------------------------------------- | -------- |
-| 天氣         | 呼叫 weather_tool，查詢即時天氣        | 呂紹銘 |
-| 景點         | 呼叫 search_tool，搜尋熱門景點         | 曹世杰 |
-| 建議         | 呼叫 advice_tool，取得隨機建議         | （待填） |
+| ------------ | -------------------------------------- |------|
+| 天氣         | 呼叫 weather_tool，查詢即時天氣        | 呂紹銘  |
+| 景點         | 呼叫 search_tool，搜尋熱門景點         | 曹世杰  |
+| 建議         | 呼叫 advice_tool，取得隨機建議         | 林楷祐  |
 | 出發         | 執行 trip_briefing Skill，產出行前簡報 | （待填） |
 
 ---
 
 ## 組員與分工
 
-| 姓名 | 負責功能     | 檔案        | 使用的 API |
-| ---- | ------------ | ----------- | ---------- |
-| 呂紹銘 | 即時天氣查詢（temp_C、weatherDesc） | `tools/weather_tool.py`  | https://wttr.in/{city}?format=j1 |
-| 曹世杰 | 熱門景點搜尋 | `tools/search_tool.py`  | DDGS |
-| （待填） | 隨機建議/冷知識 | `tools/`  | （待填） |
-| （待填） | Skill 整合   | `skills/` | —         |
-| （待填） | Agent 主程式 | `main.py` | —         |
+| 姓名   | 負責功能     | 檔案                      | 使用的 API                                                                                               |
+|------| ------------ |-------------------------|-------------------------------------------------------------------------------------------------------|
+| 呂紹銘  | 即時天氣查詢（temp_C、weatherDesc） | `tools/weather_tool.py` | https://wttr.in/{city}?format=j1                                                                      |
+| 曹世杰  | 熱門景點搜尋 | `tools/search_tool.py`  | DDGS                                                                                                  |
+| 林楷祐  | 隨機建議/冷知識 | `tools/advice_tool.py`  | 隨機活動建議 https://bored-api.appbrewery.com/random 隨機冷知識 https://uselessfacts.jsph.pl/api/v2/facts/random |
+| （待填） | Skill 整合   | `skills/`               | —                                                                                                     |
+| （待填） | Agent 主程式 | `main.py`               | —                                                                                                     |
 
 ---
 
@@ -40,7 +40,7 @@
 ├── tools/
 │   ├── weather_tool.py
 │   ├── search_tool.py   
-│   └── xxx_tool.py  
+│   └── advice_tool.py  
 ├── skills/
 │   └── xxx_skill.py  
 ├── main.py        
@@ -60,6 +60,8 @@ python -m venv .venv
 pip install -r requirements.txt
 python tools/weather_tool.py Tokyo
 python tools/search_tool.py Tokyo
+python tools/advice_tool.py activity
+python tools/advice_tool.py fact
 ```
 
 ---
@@ -93,6 +95,25 @@ PS C:\Users\USER\Desktop\code\w6-agent-team9> .venv\Scripts\python.exe tools/sea
             "snippet": "東京車站一番街 共有四個區塊分別是「TokyoGift Palette」、「東京拉麵街」、「東京零食天堂」、「東京Character Street」..."
         }
     ]
+}
+```
+
+```
+linkaiyu@linkaiyoudeMacBook-Pro-3 w6-agent-team9 % python3 tools/advice_tool.py activity
+
+{
+  "kind": "activity",
+  "activity": "Volunteer at your local food bank",
+  "type": "charity"
+}
+```
+
+```
+linkaiyu@linkaiyoudeMacBook-Pro-3 w6-agent-team9 % python3 tools/advice_tool.py fact
+
+{
+"kind": "fact",
+"fact": "The first McDonald's restaurant in Canada was in Richmond, British Columbia."
 }
 ```
 
@@ -213,12 +234,68 @@ TOOL = {
 }
 ```
 
-### [功能名稱]（負責：待填）
+### 隨機建議/冷知識（負責：林楷祐）
 
-- **Tool 名稱**：
-- **使用 API**：
-- **輸入**：
+- **Tool 名稱**：get_random_activity_advice
+- **使用 API**：https://bored-api.appbrewery.com/random
+- **輸入**：無
 - **輸出範例**：
+```json
+{
+  "kind": "activity",
+  "activity": "Clean out your garage",
+  "type": "busywork"
+}
+```
+
+```python
+TOOL: Dict[str, Any] = {
+    "name": "get_random_advice",
+    "description": "取得一則今日活動建議或隨機冷知識",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "enum": ["activity", "fact"],
+                "description": "advice 類型：activity 為今日活動建議，fact 為隨機冷知識",
+            }
+        },
+        "required": ["kind"],
+    },
+}
+```
+
+### 隨機冷知識（負責：林楷祐）
+
+- **Tool 名稱**：get_random_fact
+- **使用 API**：https://uselessfacts.jsph.pl/api/v2/facts/random
+- **輸入**：無
+- **輸出範例**：
+```json
+{
+  "kind": "fact",
+  "fact": "The longest one-syllable word in the English language is \"screeched.\""
+}
+```
+
+```python
+TOOL: Dict[str, Any] = {
+    "name": "get_random_advice",
+    "description": "取得一則今日活動建議或隨機冷知識",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "enum": ["activity", "fact"],
+                "description": "advice 類型：activity 為今日活動建議，fact 為隨機冷知識",
+            }
+        },
+        "required": ["kind"],
+    },
+}
+```
 
 ### Skill：[Skill 名稱]（負責：待填）
 
