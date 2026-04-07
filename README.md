@@ -1,5 +1,3 @@
-（請記得將該檔名改命名為 `README.md`）
-
 # AI agent 開發分組實作
 
 > 課程：AI agent 開發 — Tool 與 Skill
@@ -16,7 +14,8 @@
 | 天氣         | 呼叫 weather_tool，查詢即時天氣        | 呂紹銘  |
 | 景點         | 呼叫 search_tool，搜尋熱門景點         | 曹世杰  |
 | 建議         | 呼叫 advice_tool，取得隨機建議         | 林楷祐  |
-| 出發         | 執行 trip_briefing Skill，產出行前簡報 | （待填） |
+| 出發（城市） | 執行 trip_briefing Skill，產出行前簡報 | 呂紹銘 |
+| 雨天備案（城市） | 執行 rainy_day_backup Skill，雨天時改推室內景點與室內活動 | 呂紹銘 |
 
 ---
 
@@ -27,8 +26,9 @@
 | 呂紹銘  | 即時天氣查詢（temp_C、weatherDesc） | `tools/weather_tool.py` | https://wttr.in/{city}?format=j1                                                                      |
 | 曹世杰  | 熱門景點搜尋 | `tools/search_tool.py`  | DDGS                                                                                                  |
 | 林楷祐  | 隨機建議/冷知識 | `tools/advice_tool.py`  | 隨機活動建議 https://bored-api.appbrewery.com/random 隨機冷知識 https://uselessfacts.jsph.pl/api/v2/facts/random |
-| （待填） | Skill 整合   | `skills/`               | —                                                                                                     |
-| （待填） | Agent 主程式 | `main.py`               | —                                                                                                     |
+| 呂紹銘 | Skill 整合（行前簡報） | `skills/trip_briefing_skill.py` | 整合 weather/search/advice 三個 Tool                                                                  |
+| 呂紹銘 | Skill 整合（雨天備案） | `skills/rainy_day_backup_skill.py` | 先查天氣，若下雨則切換室內景點與室內活動建議                                                          |
+| 呂紹銘 | Agent 主程式 | `main.py`               | 透過 CLI 輸入城市並輸出行前簡報                                                                        |
 
 ---
 
@@ -42,7 +42,8 @@
 │   ├── search_tool.py   
 │   └── advice_tool.py  
 ├── skills/
-│   └── xxx_skill.py  
+│   └── trip_briefing_skill.py  
+│   └── rainy_day_backup_skill.py
 ├── main.py        
 ├── requirements.txt
 └── README.md
@@ -62,6 +63,8 @@ python tools/weather_tool.py Tokyo
 python tools/search_tool.py Tokyo
 python tools/advice_tool.py activity
 python tools/advice_tool.py fact
+python main.py Tokyo
+python main.py Tokyo --mode rainy
 ```
 
 ---
@@ -115,6 +118,32 @@ linkaiyu@linkaiyoudeMacBook-Pro-3 w6-agent-team9 % python3 tools/advice_tool.py 
 "kind": "fact",
 "fact": "The first McDonald's restaurant in Canada was in Richmond, British Columbia."
 }
+```
+
+```
+PS C:\Users\USER\Desktop\code\w6-agent-team9> .venv\Scripts\python.exe main.py Tokyo
+=== Tokyo 行前簡報 ===
+
+[天氣]  18°C，Partly cloudy
+
+[景點]  東京景點必遊、必打卡懶人包｜東京景點Top10熱門景點推薦、東京自由行：完整 行程、季節、景點、交通 - 神燈假期、【2026東京景點推薦】22個超好玩東京必去景點！ 來東京自由行這樣玩 ...
+
+[今日活動]  Meditate for five minutes（類型：relaxation）
+
+[冷知識]  Shakespeare invented the word `assassination` and `bump`.
+```
+
+```
+PS C:\Users\USER\Desktop\code\w6-agent-team9> .venv\Scripts\python.exe main.py Tokyo --mode rainy
+=== Tokyo 雨天備案簡報 ===
+
+[天氣]  18°C，Partly cloudy
+
+[判斷]  未偵測到下雨，提供一般備案
+
+[景點]  【2026東京景點攻略】50個東京自由行市區景點與郊區玩法一次看! - Mimi韓の旅遊指南、【2026東京景點】TOP50東京必去/新景點推薦,東京自由行一日遊必讀!、東京必去景點｜Trip.com 東京
+
+[今日活動]  Organize your dresser（類型：busywork）
 ```
 
 ---
@@ -297,15 +326,45 @@ TOOL: Dict[str, Any] = {
 }
 ```
 
-### Skill：[Skill 名稱]（負責：待填）
+### Skill：`trip_briefing_skill`（負責：呂紹銘）
 
 - **組合了哪些 Tool**：
+    - `tools/weather_tool.py`（`run({"city": city})`）
+    - `tools/search_tool.py`（`run({"city": city})`）
+    - `tools/advice_tool.py`（`run({"kind": "activity"})`）
+    - `tools/advice_tool.py`（`run({"kind": "fact"})`）
 - **執行順序**：
 
 ```
-Step 1: 呼叫 ___ → 取得 ___
-Step 2: 呼叫 ___ → 取得 ___
-Step 3: 組合輸出 → 產生 ___
+Step 1: 呼叫 weather_tool.run → 取得即時天氣（temp_C、weatherDesc）
+Step 2: 呼叫 search_tool.run → 取得當地熱門景點搜尋結果
+Step 3: 呼叫 advice_tool.run(kind=activity) → 取得今日活動建議
+Step 4: 呼叫 advice_tool.run(kind=fact) → 取得旅遊冷知識
+Step 5: 組合輸出 → 產生「=== 城市 行前簡報 ===」
+```
+
+### Skill：`rainy_day_backup_skill`（負責：呂紹銘）
+
+- **功能目標**：先看天氣，如果下雨就自動改推薦室內景點與室內活動建議。
+- **組合了哪些 Tool**：
+    - `tools/weather_tool.py`（`run({"city": city})`）
+    - `tools/search_tool.py`（`run({"city": city + " 雨天 室內景點"})`）
+    - `tools/search_tool.py`（`run({"city": city + " 雨天 室內活動 建議"})`）
+    - `tools/advice_tool.py`（天氣非雨天時，`run({"kind": "activity"})`）
+- **執行順序**：
+
+```
+Step 1: 呼叫 weather_tool.run → 取得即時天氣
+Step 2: 判斷 weatherDesc 是否包含 rain/shower/drizzle/storm/雨
+Step 3: 若下雨，呼叫 search_tool.run(室內景點 + 室內活動關鍵字)
+Step 4: 若未下雨，維持一般景點與今日活動建議
+Step 5: 組合輸出 → 產生「=== 城市 雨天備案簡報 ===」
+```
+
+- **使用範例**：
+
+```bash
+python main.py Tokyo --mode rainy
 ```
 
 ---
@@ -314,12 +373,17 @@ Step 3: 組合輸出 → 產生 ___
 
 ### 遇到最難的問題
 
-> 寫下這次實作遇到最困難的事，以及怎麼解決的
+這次最難的地方是「多個 Tool 串接後的穩定性」。
+例如景點搜尋在部分環境會遇到套件相依問題，若沒有處理好，整份行前簡報就會中斷。
+我們的做法是在 Skill 層加上安全呼叫與錯誤訊息回傳：即使某一個 Tool 失敗，其他區塊（天氣、活動、冷知識）仍可正常輸出，讓使用者至少拿到可用的行前資訊。
 
 ### Tool 和 Skill 的差別
 
-> 用自己的話說說，做完後你怎麼理解兩者的不同
+Tool 是「單一能力」，例如查天氣、找景點、拿建議；
+Skill 是「流程編排」，會依照任務目標決定呼叫哪些 Tool、呼叫順序與最後輸出格式。
+這次的 `trip_briefing_skill` 就是把多個 Tool 的結果整合成一份完整「行前簡報」，這也是 Agent 真正提供價值的地方。
 
 ### 如果再加一個功能
 
-> 如果可以多加一個 Tool，你會加什麼？為什麼？
+我們會想加「旅遊預算估算 Tool」。
+使用者輸入旅遊天數與城市後，回傳住宿、交通、餐食的區間估算，並搭配目前簡報的天氣與活動建議，做成更完整的出發前決策資訊。
